@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #game { margin: 20px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <h1>Hangman Game</h1>
+        <button onclick="startGame()">Start New Game</button>
+        <div id="wordDisplay"></div>
+        <input type="text" id="letterInput" maxlength="1">
+        <button onclick="makeGuess()">Guess</button>
+        <p>Wrong guesses: <span id="wrongGuesses">0</span></p>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:3000';
+
+        async function startGame() {
+            const response = await fetch(`${apiUrl}/start`);
+            const data = await response.json();
+            document.getElementById('wordDisplay').innerText = data.currentWord;
+            document.getElementById('wrongGuesses').innerText = data.wrongGuesses;
+            document.getElementById('message').innerText = '';
+        }
+
+        async function makeGuess() {
+            const letter = document.getElementById('letterInput').value;
+            if (!letter) return;
+
+            const response = await fetch(`${apiUrl}/guess`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ letter })
+            });
+
+            const data = await response.json();
+            document.getElementById('wordDisplay').innerText = data.displayWord;
+            document.getElementById('wrongGuesses').innerText = data.wrongGuesses;
+
+            if (data.displayWord.indexOf('_') === -1) {
+                document.getElementById('message').innerText = 'Congratulations, you won!';
+            } else if (data.wrongGuesses >= 6) {
+                document.getElementById('message').innerText = 'Game Over. You lost!';
+            }
+
+            document.getElementById('letterInput').value = '';
+        }
+    </script>
+</body>
+</html>
